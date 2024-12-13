@@ -22,3 +22,13 @@ metaflow-card-html
 
 azure-ai-ml
 azureml-mlflow
+
+# for system metrics tracking
+psutil
+pynvml
+
+# Core Jupyter dependencies
+jupyter
+notebook
+ipykernel
+ipywidgets
