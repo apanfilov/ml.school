@@ -25,6 +25,7 @@ from metaflow import (
     resources,
     step,
 )
+# from confusion_matrix_card import create_confusion_matrix_card
 
 configure_logging()
 
@@ -43,6 +44,9 @@ configure_logging()
         "mlflow",
         "setuptools",
         "python-dotenv",
+        "psutil",
+        "pynvml",
+        'seaborn'
     ),
 )
 class Training(FlowSpec, FlowMixin):
@@ -229,6 +233,7 @@ class Training(FlowSpec, FlowMixin):
             "KERAS_BACKEND": os.getenv("KERAS_BACKEND", "jax"),
         },
     )
+    # @card
     @step
     def evaluate_fold(self):
         """Evaluate the model we created as part of the cross-validation process.
@@ -247,6 +252,17 @@ class Training(FlowSpec, FlowMixin):
             self.y_test,
             verbose=2,
         )
+
+        # labels = ['Class 0', 'Class 1']
+        # current.card.append(
+        #     create_confusion_matrix_card(
+        #         y_true=self.y_true,
+        #         y_pred=self.y_pred,
+        #         labels=labels,
+        #         title="Model Evaluation Results"
+        #     )
+        # )
+
 
         logging.info(
             "Fold %d - loss: %f - accuracy: %f",
