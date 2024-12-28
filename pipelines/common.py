@@ -28,7 +28,7 @@ PACKAGES = {
     "python-dotenv": "1.0.1",
     "psutil":"6.1.0",
     "pynvml":"12.0.0",
-    "seaborn":"0.13.2"
+    "seaborn":"0.13.2",
     "pynvml":"12.0.0"
 }
 
