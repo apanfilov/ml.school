@@ -29,6 +29,7 @@ PACKAGES = {
     "psutil":"6.1.0",
     "pynvml":"12.0.0",
     "seaborn":"0.13.2"
+    "pynvml":"12.0.0"
 }
 
 TRAINING_EPOCHS = 50

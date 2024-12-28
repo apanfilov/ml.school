@@ -1,5 +1,6 @@
 import logging
 import os
+import inspect
 from pathlib import Path
 
 from common import (
@@ -47,6 +48,7 @@ configure_logging()
         "psutil",
         "pynvml",
         'seaborn'
+        "pynvml"
     ),
 )
 class Training(FlowSpec, FlowMixin):
@@ -85,6 +87,12 @@ class Training(FlowSpec, FlowMixin):
         logging.info("MLFLOW_TRACKING_URI: %s", self.mlflow_tracking_uri)
         mlflow.set_tracking_uri(self.mlflow_tracking_uri)
 
+        # Enable system metrics collection
+        mlflow.enable_system_metrics_logging()
+
+        mlflow.set_system_metrics_sampling_interval(1)
+        mlflow.set_system_metrics_samples_before_logging(1)
+
         self.mode = "production" if current.is_production else "development"
         logging.info("Running flow in %s mode.", self.mode)
 
@@ -95,7 +103,7 @@ class Training(FlowSpec, FlowMixin):
             # execution of this flow. We want to set the name of the MLFlow
             # experiment to the Metaflow run identifier so we can easily
             # recognize which experiment corresponds with each run.
-            run = mlflow.start_run(run_name=current.run_id)
+            run = mlflow.start_run(run_name=current.run_id, log_system_metrics=True)
             self.mlflow_run_id = run.info.run_id
         except Exception as e:
             message = f"Failed to connect to MLflow server {self.mlflow_tracking_uri}."
@@ -107,6 +115,18 @@ class Training(FlowSpec, FlowMixin):
             "epochs": TRAINING_EPOCHS,
             "batch_size": TRAINING_BATCH_SIZE,
         }
+
+        # Tracking source code of metaflow pipeline
+
+        # Get source file path using inspect
+        source_path = inspect.getfile(self.__class__)
+        
+        # Log source code if file exists
+        if os.path.exists(source_path):
+            mlflow.log_artifact(source_path, "source_code")
+            
+
+        # End of tracking
 
         # Now that everything is set up, we want to run a cross-validation process
         # to evaluate the model and train a final model on the entire dataset. Since
@@ -198,7 +218,7 @@ class Training(FlowSpec, FlowMixin):
         # a nested run for each fold to keep track of each separate model individually.
         mlflow.set_tracking_uri(self.mlflow_tracking_uri)
         with (
-            mlflow.start_run(run_id=self.mlflow_run_id),
+            mlflow.start_run(run_id=self.mlflow_run_id, log_system_metrics=True),
             mlflow.start_run(
                 run_name=f"cross-validation-fold-{self.fold}",
                 nested=True,
@@ -375,7 +395,7 @@ class Training(FlowSpec, FlowMixin):
         # Let's log the training process under the experiment we started at the
         # beginning of the flow.
         mlflow.set_tracking_uri(self.mlflow_tracking_uri)
-        with mlflow.start_run(run_id=self.mlflow_run_id):
+        with mlflow.start_run(run_id=self.mlflow_run_id, log_system_metrics=True):
             # Let's disable the automatic logging of models during training so we
             # can log the model manually during the registration step.
             mlflow.autolog(log_models=False)
